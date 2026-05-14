@@ -1094,7 +1094,7 @@ function startGoogleAuth() {
 
   // Real Google OAuth
   const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?` +
-    `client_id=${CLIENT_ID}&redirect_uri=${encodeURIComponent(location.origin + '/callback')}&` +
+    `client_id=${CLIENT_ID}&redirect_uri=${encodeURIComponent('https://gudae3047.github.io/calender-app/')}&` +
     `response_type=token&scope=${encodeURIComponent(SCOPES)}`;
   window.location.href = authUrl;
 }
