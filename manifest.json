@@ -2,7 +2,7 @@
   "name": "일정 관리",
   "short_name": "일정관리",
   "description": "구글 캘린더 연동 일정 관리 앱",
-  "start_url": "/",
+  "start_url": "/calender-app/",
   "display": "standalone",
   "background_color": "#0a0a0f",
   "theme_color": "#7c6ff7",
