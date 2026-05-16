@@ -2,993 +2,408 @@
 <html lang="ko">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="theme-color" content="#0f0f0f">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#0d0d14">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="일정관리">
 <link rel="manifest" href="manifest.json">
 <title>일정 관리</title>
-<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&family=DM+Serif+Display&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <style>
-  :root {
-    --bg: #0a0a0f;
-    --surface: #13131a;
-    --surface2: #1c1c28;
-    --surface3: #252535;
-    --border: rgba(255,255,255,0.07);
-    --border2: rgba(255,255,255,0.13);
-    --text: #f0eff8;
-    --text2: #9493b0;
-    --text3: #5a5975;
-    --accent: #7c6ff7;
-    --accent2: #a89cf8;
-    --accent-dim: rgba(124,111,247,0.15);
-    --green: #4eca8b;
-    --green-dim: rgba(78,202,139,0.12);
-    --red: #f76f6f;
-    --amber: #f7bc6f;
-    --blue: #6fb8f7;
-    --pink: #f76fb8;
-    --radius: 12px;
-    --radius-lg: 18px;
-  }
-
-  * { margin:0; padding:0; box-sizing:border-box; }
-
-  body {
-    font-family: 'Noto Sans KR', sans-serif;
-    background: var(--bg);
-    color: var(--text);
-    min-height: 100vh;
-    overflow-x: hidden;
-  }
-
-  /* Background grid */
-  body::before {
-    content: '';
-    position: fixed;
-    inset: 0;
-    background-image:
-      linear-gradient(rgba(124,111,247,0.03) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(124,111,247,0.03) 1px, transparent 1px);
-    background-size: 40px 40px;
-    pointer-events: none;
-    z-index: 0;
-  }
-
-  /* Glow */
-  body::after {
-    content: '';
-    position: fixed;
-    top: -30%;
-    right: -10%;
-    width: 600px;
-    height: 600px;
-    background: radial-gradient(circle, rgba(124,111,247,0.08) 0%, transparent 70%);
-    pointer-events: none;
-    z-index: 0;
-  }
-
-  .app { position: relative; z-index: 1; display: flex; flex-direction: column; min-height: 100vh; }
-
-  /* Header */
-  header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 1.25rem 2rem;
-    border-bottom: 1px solid var(--border);
-    background: rgba(10,10,15,0.85);
-    backdrop-filter: blur(20px);
-    position: sticky;
-    top: 0;
-    z-index: 100;
-  }
-
-  .logo {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-  }
-
-  .logo-icon {
-    width: 34px;
-    height: 34px;
-    background: var(--accent-dim);
-    border: 1px solid rgba(124,111,247,0.3);
-    border-radius: 10px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 16px;
-  }
-
-  .logo-text {
-    font-size: 17px;
-    font-weight: 700;
-    letter-spacing: -0.3px;
-  }
-
-  .logo-text span { color: var(--accent2); }
-
-  .header-actions { display: flex; align-items: center; gap: 10px; }
-
-  .sync-status {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    font-size: 12px;
-    color: var(--text2);
-    padding: 5px 12px;
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 100px;
-  }
-
-  .sync-dot {
-    width: 7px;
-    height: 7px;
-    border-radius: 50%;
-    background: var(--green);
-  }
-
-  .sync-dot.syncing {
-    animation: pulse 1.2s ease-in-out infinite;
-    background: var(--amber);
-  }
-
-  @keyframes pulse {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.3; }
-  }
-
-  .btn {
-    padding: 8px 16px;
-    border-radius: 10px;
-    font-size: 13px;
-    font-weight: 500;
-    cursor: pointer;
-    border: none;
-    font-family: inherit;
-    transition: all 0.15s;
-  }
-
-  .btn-primary {
-    background: var(--accent);
-    color: #fff;
-  }
-
-  .btn-primary:hover { background: var(--accent2); transform: translateY(-1px); }
-
-  .btn-ghost {
-    background: var(--surface2);
-    color: var(--text);
-    border: 1px solid var(--border2);
-  }
-
-  .btn-ghost:hover { background: var(--surface3); }
-
-  .btn-icon {
-    width: 36px;
-    height: 36px;
-    padding: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 18px;
-    background: var(--surface2);
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    cursor: pointer;
-    color: var(--text2);
-    transition: all 0.15s;
-  }
-
-  .btn-icon:hover { background: var(--surface3); color: var(--text); }
-
-  /* Auth screen */
-  #auth-screen {
-    flex: 1;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 2rem;
-  }
-
-  .auth-card {
-    max-width: 420px;
-    width: 100%;
-    background: var(--surface);
-    border: 1px solid var(--border2);
-    border-radius: var(--radius-lg);
-    padding: 3rem 2.5rem;
-    text-align: center;
-  }
-
-  .auth-icon {
-    width: 72px;
-    height: 72px;
-    background: var(--accent-dim);
-    border: 1px solid rgba(124,111,247,0.25);
-    border-radius: 20px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 32px;
-    margin: 0 auto 1.5rem;
-  }
-
-  .auth-card h2 { font-size: 24px; font-weight: 700; margin-bottom: 0.5rem; }
-  .auth-card p { color: var(--text2); font-size: 14px; line-height: 1.6; margin-bottom: 2rem; }
-
-  .btn-google {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 10px;
-    width: 100%;
-    padding: 12px;
-    background: #fff;
-    color: #3c4043;
-    border: none;
-    border-radius: 12px;
-    font-size: 15px;
-    font-weight: 600;
-    font-family: inherit;
-    cursor: pointer;
-    transition: all 0.15s;
-  }
-
-  .btn-google:hover { background: #f8f9fa; transform: translateY(-1px); box-shadow: 0 8px 24px rgba(0,0,0,0.3); }
-
-  .google-icon {
-    width: 20px;
-    height: 20px;
-  }
-
-  .setup-notice {
-    margin-top: 1.5rem;
-    padding: 1rem;
-    background: rgba(247,188,111,0.08);
-    border: 1px solid rgba(247,188,111,0.2);
-    border-radius: 10px;
-    font-size: 12px;
-    color: var(--amber);
-    text-align: left;
-    line-height: 1.6;
-  }
-
-  /* Main app */
-  #main-app { display: none; flex: 1; flex-direction: column; }
-
-  /* Layout */
-  .app-layout {
-    display: grid;
-    grid-template-columns: 280px 1fr;
-    flex: 1;
-    overflow: hidden;
-  }
-
-  /* Sidebar */
-  .sidebar {
-    border-right: 1px solid var(--border);
-    padding: 1.5rem 1rem;
-    overflow-y: auto;
-    display: flex;
-    flex-direction: column;
-    gap: 1.5rem;
-  }
-
-  /* Mini calendar */
-  .mini-cal { }
-
-  .mini-cal-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-bottom: 0.75rem;
-    padding: 0 4px;
-  }
-
-  .mini-cal-title { font-size: 14px; font-weight: 600; }
-
-  .mini-cal-nav { display: flex; gap: 4px; }
-
-  .mini-cal-nav button {
-    background: none;
-    border: none;
-    color: var(--text2);
-    cursor: pointer;
-    width: 24px;
-    height: 24px;
-    border-radius: 6px;
-    font-size: 14px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: all 0.1s;
-  }
-
-  .mini-cal-nav button:hover { background: var(--surface2); color: var(--text); }
-
-  .mini-cal-grid {
-    display: grid;
-    grid-template-columns: repeat(7, 1fr);
-    gap: 2px;
-  }
-
-  .mini-cal-dow {
-    text-align: center;
-    font-size: 11px;
-    color: var(--text3);
-    padding: 4px 0;
-    font-weight: 500;
-  }
-
-  .mini-cal-day {
-    aspect-ratio: 1;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 12px;
-    border-radius: 8px;
-    cursor: pointer;
-    color: var(--text2);
-    transition: all 0.1s;
-    position: relative;
-  }
-
-  .mini-cal-day:hover { background: var(--surface2); color: var(--text); }
-
-  .mini-cal-day.today {
-    background: var(--accent-dim);
-    color: var(--accent2);
-    font-weight: 700;
-  }
-
-  .mini-cal-day.selected {
-    background: var(--accent);
-    color: #fff;
-    font-weight: 700;
-  }
-
-  .mini-cal-day.has-events::after {
-    content: '';
-    position: absolute;
-    bottom: 3px;
-    width: 4px;
-    height: 4px;
-    border-radius: 50%;
-    background: var(--accent2);
-  }
-
-  .mini-cal-day.has-events.today::after,
-  .mini-cal-day.has-events.selected::after { background: rgba(255,255,255,0.7); }
-
-  .mini-cal-day.other-month { color: var(--text3); }
-
-  /* Sidebar section */
-  .sidebar-section { }
-
-  .sidebar-section-title {
-    font-size: 11px;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-    color: var(--text3);
-    margin-bottom: 0.5rem;
-    padding: 0 4px;
-  }
-
-  /* Upcoming */
-  .upcoming-list { display: flex; flex-direction: column; gap: 6px; }
-
-  .upcoming-item {
-    display: flex;
-    align-items: flex-start;
-    gap: 10px;
-    padding: 10px 10px;
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    cursor: pointer;
-    transition: all 0.15s;
-  }
-
-  .upcoming-item:hover { background: var(--surface2); border-color: var(--border2); }
-
-  .upcoming-color { width: 3px; height: 36px; border-radius: 2px; flex-shrink: 0; margin-top: 2px; }
-
-  .upcoming-info { flex: 1; min-width: 0; }
-
-  .upcoming-title {
-    font-size: 12px;
-    font-weight: 600;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    margin-bottom: 2px;
-  }
-
-  .upcoming-time { font-size: 11px; color: var(--text2); }
-
-  .upcoming-countdown {
-    font-size: 11px;
-    font-weight: 600;
-    color: var(--accent2);
-    white-space: nowrap;
-  }
-
-  .upcoming-countdown.soon { color: var(--red); }
-
-  /* Add event button */
-  .add-event-btn {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    width: 100%;
-    padding: 10px 12px;
-    background: var(--accent-dim);
-    border: 1px dashed rgba(124,111,247,0.3);
-    border-radius: var(--radius);
-    color: var(--accent2);
-    font-size: 13px;
-    font-weight: 500;
-    cursor: pointer;
-    font-family: inherit;
-    transition: all 0.15s;
-  }
-
-  .add-event-btn:hover { background: rgba(124,111,247,0.2); border-color: var(--accent); }
-
-  /* Main content */
-  .main-content { overflow-y: auto; padding: 1.5rem 2rem; }
-
-  /* View switcher */
-  .view-bar {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-bottom: 1.5rem;
-  }
-
-  .view-title { font-size: 22px; font-weight: 700; }
-
-  .view-tabs {
-    display: flex;
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    padding: 3px;
-    gap: 2px;
-  }
-
-  .view-tab {
-    padding: 6px 16px;
-    border-radius: 9px;
-    font-size: 13px;
-    font-weight: 500;
-    cursor: pointer;
-    border: none;
-    background: transparent;
-    color: var(--text2);
-    font-family: inherit;
-    transition: all 0.15s;
-  }
-
-  .view-tab.active { background: var(--surface3); color: var(--text); }
-
-  /* Week view */
-  .week-grid {
-    display: grid;
-    grid-template-columns: 60px repeat(7, 1fr);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-lg);
-    overflow: hidden;
-  }
-
-  .week-header {
-    display: contents;
-  }
-
-  .week-header-time {
-    background: var(--surface);
-    border-right: 1px solid var(--border);
-    border-bottom: 1px solid var(--border);
-    padding: 8px 4px;
-  }
-
-  .week-header-day {
-    background: var(--surface);
-    border-right: 1px solid var(--border);
-    border-bottom: 1px solid var(--border);
-    padding: 10px 8px;
-    text-align: center;
-    font-size: 12px;
-  }
-
-  .week-header-day:last-child { border-right: none; }
-
-  .week-header-day .day-num {
-    font-size: 20px;
-    font-weight: 700;
-    line-height: 1.2;
-    margin-bottom: 2px;
-  }
-
-  .week-header-day .day-name { color: var(--text2); font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; }
-
-  .week-header-day.today .day-num { color: var(--accent2); }
-
-  .week-header-day.today {
-    background: var(--accent-dim);
-    border-bottom-color: rgba(124,111,247,0.2);
-  }
-
-  .week-body { display: contents; }
-
-  .time-label {
-    border-right: 1px solid var(--border);
-    padding: 0 6px;
-    height: 56px;
-    display: flex;
-    align-items: flex-start;
-    justify-content: flex-end;
-    font-size: 10px;
-    color: var(--text3);
-    padding-top: 4px;
-    background: var(--surface);
-  }
-
-  .day-col {
-    border-right: 1px solid var(--border);
-    position: relative;
-    height: 56px;
-  }
-
-  .day-col:last-child { border-right: none; }
-
-  .day-col.today { background: rgba(124,111,247,0.02); }
-
-  .hour-line {
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 1px;
-    background: var(--border);
-  }
-
-  .event-block {
-    position: absolute;
-    left: 2px;
-    right: 2px;
-    border-radius: 6px;
-    padding: 3px 6px;
-    font-size: 11px;
-    font-weight: 600;
-    overflow: hidden;
-    cursor: pointer;
-    z-index: 10;
-    transition: all 0.15s;
-  }
-
-  .event-block:hover { transform: scale(1.02); z-index: 20; }
-
-  .event-block .ev-time { font-weight: 400; opacity: 0.8; font-size: 10px; }
-
-  /* Now line */
-  .now-line {
-    position: absolute;
-    left: 0;
-    right: 0;
-    height: 2px;
-    background: var(--red);
-    z-index: 15;
-  }
-
-  .now-line::before {
-    content: '';
-    position: absolute;
-    left: -4px;
-    top: -4px;
-    width: 10px;
-    height: 10px;
-    border-radius: 50%;
-    background: var(--red);
-  }
-
-  /* Day view event list */
-  .day-events { display: flex; flex-direction: column; gap: 8px; }
-
-  .day-event-card {
-    display: flex;
-    align-items: stretch;
-    gap: 0;
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    overflow: hidden;
-    cursor: pointer;
-    transition: all 0.15s;
-  }
-
-  .day-event-card:hover { background: var(--surface2); border-color: var(--border2); }
-
-  .day-event-color { width: 4px; flex-shrink: 0; }
-
-  .day-event-body { flex: 1; padding: 12px 14px; }
-
-  .day-event-title { font-size: 14px; font-weight: 600; margin-bottom: 4px; }
-
-  .day-event-meta {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    font-size: 12px;
-    color: var(--text2);
-  }
-
-  .day-event-badges { display: flex; gap: 6px; margin-top: 8px; }
-
-  .badge {
-    font-size: 11px;
-    font-weight: 600;
-    padding: 2px 8px;
-    border-radius: 100px;
-  }
-
-  /* Notification panel */
-  .notif-bar {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    padding: 12px 16px;
-    background: rgba(124,111,247,0.08);
-    border-bottom: 1px solid rgba(124,111,247,0.15);
-  }
-
-  .notif-bar-icon { font-size: 18px; }
-
-  .notif-bar-text { flex: 1; font-size: 13px; }
-
-  .notif-bar-text strong { color: var(--accent2); }
-
-  /* Modal */
-  .modal-overlay {
-    position: fixed;
-    inset: 0;
-    background: rgba(0,0,0,0.7);
-    backdrop-filter: blur(8px);
-    z-index: 1000;
-    display: none;
-    align-items: center;
-    justify-content: center;
-    padding: 2rem;
-  }
-
-  .modal-overlay.open { display: flex; }
-
-  .modal {
-    background: var(--surface);
-    border: 1px solid var(--border2);
-    border-radius: var(--radius-lg);
-    padding: 2rem;
-    width: 100%;
-    max-width: 480px;
-    animation: slideUp 0.2s ease;
-  }
-
-  @keyframes slideUp {
-    from { opacity: 0; transform: translateY(20px); }
-    to { opacity: 1; transform: translateY(0); }
-  }
-
-  .modal-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-bottom: 1.5rem;
-  }
-
-  .modal-title { font-size: 18px; font-weight: 700; }
-
-  .modal-close {
-    background: none;
-    border: none;
-    color: var(--text2);
-    font-size: 22px;
-    cursor: pointer;
-    line-height: 1;
-    padding: 0;
-  }
-
-  .modal-close:hover { color: var(--text); }
-
-  .form-group { margin-bottom: 1.25rem; }
-
-  .form-label { display: block; font-size: 12px; font-weight: 600; color: var(--text2); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.05em; }
-
-  .form-input {
-    width: 100%;
-    padding: 10px 14px;
-    background: var(--surface2);
-    border: 1px solid var(--border2);
-    border-radius: 10px;
-    color: var(--text);
-    font-size: 14px;
-    font-family: inherit;
-    outline: none;
-    transition: border-color 0.15s;
-  }
-
-  .form-input:focus { border-color: var(--accent); }
-
-  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-
-  .color-picker { display: flex; gap: 8px; flex-wrap: wrap; }
-
-  .color-swatch {
-    width: 28px;
-    height: 28px;
-    border-radius: 8px;
-    cursor: pointer;
-    border: 2px solid transparent;
-    transition: all 0.1s;
-  }
-
-  .color-swatch.selected { border-color: #fff; transform: scale(1.1); }
-
-  .modal-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 1.5rem; }
-
-  /* Toast */
-  .toast-container {
-    position: fixed;
-    bottom: 2rem;
-    right: 2rem;
-    z-index: 9999;
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-  }
-
-  .toast {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    padding: 12px 16px;
-    background: var(--surface3);
-    border: 1px solid var(--border2);
-    border-radius: 12px;
-    font-size: 13px;
-    box-shadow: 0 8px 32px rgba(0,0,0,0.5);
-    animation: slideRight 0.3s ease;
-    min-width: 240px;
-  }
-
-  @keyframes slideRight {
-    from { opacity: 0; transform: translateX(100px); }
-    to { opacity: 1; transform: translateX(0); }
-  }
-
-  .toast-icon { font-size: 18px; }
-
-  /* Empty state */
-  .empty-state {
-    text-align: center;
-    padding: 4rem 2rem;
-    color: var(--text2);
-  }
-
-  .empty-state-icon { font-size: 48px; margin-bottom: 1rem; opacity: 0.4; }
-  .empty-state h3 { font-size: 16px; font-weight: 600; margin-bottom: 0.5rem; color: var(--text); }
-  .empty-state p { font-size: 13px; line-height: 1.6; }
-
-  /* Responsive */
-  @media (max-width: 768px) {
-    .app-layout { grid-template-columns: 1fr; }
-    .sidebar { display: none; }
-    header { padding: 1rem; }
-    .main-content { padding: 1rem; }
-  }
-
-  /* Scrollbar */
-  ::-webkit-scrollbar { width: 4px; }
-  ::-webkit-scrollbar-track { background: transparent; }
-  ::-webkit-scrollbar-thumb { background: var(--surface3); border-radius: 2px; }
-
-  /* Config panel */
-  .config-panel {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-lg);
-    padding: 1.25rem;
-    margin-bottom: 1rem;
-  }
-
-  .config-title {
-    font-size: 12px;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-    color: var(--text3);
-    margin-bottom: 0.75rem;
-  }
-
-  .config-row {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 6px 0;
-  }
-
-  .config-row label { font-size: 13px; color: var(--text2); }
-
-  .toggle {
-    width: 40px;
-    height: 22px;
-    background: var(--surface3);
-    border-radius: 11px;
-    position: relative;
-    cursor: pointer;
-    transition: background 0.2s;
-  }
-
-  .toggle.on { background: var(--accent); }
-
-  .toggle::after {
-    content: '';
-    position: absolute;
-    top: 3px;
-    left: 3px;
-    width: 16px;
-    height: 16px;
-    background: #fff;
-    border-radius: 50%;
-    transition: transform 0.2s;
-  }
-
-  .toggle.on::after { transform: translateX(18px); }
+:root {
+  --bg: #0d0d14;
+  --surface: #16161f;
+  --surface2: #1e1e2a;
+  --surface3: #272736;
+  --border: rgba(255,255,255,0.06);
+  --border2: rgba(255,255,255,0.11);
+  --text: #eeedf8;
+  --text2: #8887a8;
+  --text3: #4a4968;
+  --accent: #7b6ef6;
+  --accent2: #a396f8;
+  --accent-dim: rgba(123,110,246,0.14);
+  --green: #4dd696;
+  --red: #f56565;
+  --amber: #f6a93b;
+  --blue: #5bb5f7;
+  --pink: #f56eb5;
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --nav-h: 68px;
+}
+* { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+html,body { height:100%; overflow:hidden; }
+body { font-family:'Noto Sans KR',sans-serif; background:var(--bg); color:var(--text); }
+
+.screen { position:absolute; inset:0; display:none; flex-direction:column; overflow:hidden; }
+.screen.active { display:flex; }
+
+/* AUTH */
+#auth-screen { align-items:center; justify-content:center; padding:2rem; padding-top:calc(var(--safe-top) + 2rem); }
+.auth-bg { position:absolute; inset:0; background: radial-gradient(ellipse 80% 50% at 50% -20%,rgba(123,110,246,.18) 0%,transparent 70%), radial-gradient(ellipse 60% 40% at 80% 80%,rgba(91,181,247,.08) 0%,transparent 60%); pointer-events:none; }
+.auth-card { position:relative; width:100%; max-width:360px; text-align:center; }
+.auth-logo { width:80px; height:80px; background:linear-gradient(135deg,var(--accent),var(--blue)); border-radius:26px; display:flex; align-items:center; justify-content:center; font-size:38px; margin:0 auto 1.75rem; box-shadow:0 20px 60px rgba(123,110,246,.35); }
+.auth-card h1 { font-size:26px; font-weight:700; margin-bottom:.5rem; letter-spacing:-.5px; }
+.auth-card p { font-size:14px; color:var(--text2); line-height:1.6; margin-bottom:2.5rem; }
+.btn-google { display:flex; align-items:center; justify-content:center; gap:12px; width:100%; padding:15px; background:#fff; color:#3c4043; border:none; border-radius:16px; font-size:15px; font-weight:600; font-family:inherit; cursor:pointer; box-shadow:0 4px 20px rgba(0,0,0,.3); transition:transform .15s; }
+.btn-google:active { transform:scale(.97); }
+.demo-btn { margin-top:12px; width:100%; padding:13px; background:var(--surface2); border:1px solid var(--border2); border-radius:16px; color:var(--text2); font-size:14px; font-family:inherit; cursor:pointer; }
+.demo-btn:active { background:var(--surface3); }
+
+/* HEADER */
+.app-header { padding:calc(var(--safe-top) + 14px) 20px 14px; display:flex; align-items:center; justify-content:space-between; background:rgba(13,13,20,.92); backdrop-filter:blur(20px); -webkit-backdrop-filter:blur(20px); border-bottom:1px solid var(--border); flex-shrink:0; }
+.header-month { font-size:20px; font-weight:700; letter-spacing:-.5px; }
+.header-right { display:flex; align-items:center; gap:8px; }
+.sync-pill { display:flex; align-items:center; gap:5px; font-size:11px; color:var(--text2); padding:4px 10px; background:var(--surface2); border:1px solid var(--border); border-radius:100px; }
+.sync-dot { width:6px; height:6px; border-radius:50%; background:var(--green); }
+.sync-dot.syncing { animation:blink 1s ease-in-out infinite; background:var(--amber); }
+@keyframes blink { 0%,100%{opacity:1}50%{opacity:.2} }
+.icon-btn { width:38px; height:38px; border-radius:12px; border:none; background:var(--surface2); color:var(--text2); font-size:17px; display:flex; align-items:center; justify-content:center; cursor:pointer; }
+.icon-btn:active { background:var(--surface3); }
+
+/* SCROLL */
+.scroll-area { flex:1; overflow-y:auto; -webkit-overflow-scrolling:touch; overscroll-behavior:contain; }
+
+/* TABS */
+.tab-bar { display:flex; gap:6px; padding:12px 16px; overflow-x:auto; scrollbar-width:none; }
+.tab-bar::-webkit-scrollbar { display:none; }
+.tab-btn { padding:7px 16px; border-radius:100px; border:1px solid var(--border2); background:transparent; color:var(--text2); font-size:13px; font-weight:500; font-family:inherit; white-space:nowrap; cursor:pointer; flex-shrink:0; }
+.tab-btn.active { background:var(--accent); border-color:var(--accent); color:#fff; }
+
+/* MINI CAL */
+.mini-cal-wrap { padding:12px 16px 8px; }
+.mini-cal-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:10px; }
+.mini-cal-nav-btn { width:32px; height:32px; border-radius:10px; border:none; background:var(--surface2); color:var(--text2); font-size:16px; cursor:pointer; display:flex; align-items:center; justify-content:center; }
+.mini-cal-grid { display:grid; grid-template-columns:repeat(7,1fr); gap:3px; }
+.mini-cal-dow { text-align:center; font-size:11px; color:var(--text3); font-weight:600; padding:4px 0 6px; }
+.mini-cal-day { aspect-ratio:1; display:flex; flex-direction:column; align-items:center; justify-content:center; font-size:13px; border-radius:10px; cursor:pointer; color:var(--text2); gap:2px; }
+.mini-cal-day:active { opacity:.6; }
+.mini-cal-day.today { background:var(--accent-dim); color:var(--accent2); font-weight:700; }
+.mini-cal-day.selected { background:var(--accent); color:#fff; font-weight:700; }
+.mini-cal-day.other-month { color:var(--text3); }
+.day-dot { width:4px; height:4px; border-radius:50%; background:var(--accent2); flex-shrink:0; }
+.mini-cal-day.selected .day-dot { background:rgba(255,255,255,.7); }
+.mini-cal-day.today:not(.selected) .day-dot { background:var(--accent); }
+
+/* DIVIDER */
+.divider { height:1px; background:var(--border); margin:4px 0; }
+
+/* SECTION */
+.section-hdr { display:flex; align-items:center; justify-content:space-between; padding:14px 16px 8px; }
+.section-title { font-size:12px; font-weight:700; color:var(--text2); text-transform:uppercase; letter-spacing:.07em; }
+.section-link { font-size:12px; color:var(--accent2); background:none; border:none; cursor:pointer; font-family:inherit; }
+
+/* EVENT CARDS */
+.events-list { padding:0 16px; display:flex; flex-direction:column; gap:8px; }
+.ev-card { display:flex; align-items:stretch; background:var(--surface); border:1px solid var(--border); border-radius:16px; overflow:hidden; cursor:pointer; transition:transform .1s; }
+.ev-card:active { transform:scale(.98); }
+.ev-stripe { width:4px; flex-shrink:0; }
+.ev-body { flex:1; padding:12px 14px; min-width:0; }
+.ev-title { font-size:14px; font-weight:600; margin-bottom:4px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.ev-meta { display:flex; align-items:center; gap:8px; font-size:12px; color:var(--text2); flex-wrap:wrap; }
+.ev-right { display:flex; flex-direction:column; align-items:flex-end; justify-content:center; padding:12px 14px 12px 0; gap:4px; flex-shrink:0; }
+.ev-time-badge { font-size:12px; font-weight:600; color:var(--text2); }
+.ev-duration { font-size:11px; color:var(--text3); }
+.ev-card.allday { background:var(--accent-dim); border-color:rgba(123,110,246,.2); }
+
+/* UPCOMING */
+.upcoming-card { margin:0 16px; background:linear-gradient(135deg,rgba(123,110,246,.1) 0%,rgba(91,181,247,.06) 100%); border:1px solid rgba(123,110,246,.18); border-radius:18px; padding:16px; }
+.upcoming-label { font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.08em; color:var(--accent2); margin-bottom:10px; }
+.upcoming-item { display:flex; align-items:center; gap:10px; padding:8px 0; border-bottom:1px solid rgba(255,255,255,.05); cursor:pointer; }
+.upcoming-item:last-child { border-bottom:none; padding-bottom:0; }
+.upcoming-item:first-child { padding-top:0; }
+.upcoming-color-bar { width:3px; height:32px; border-radius:2px; flex-shrink:0; }
+.upcoming-info { flex:1; min-width:0; }
+.upcoming-title { font-size:13px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.upcoming-when { font-size:11px; color:var(--text2); margin-top:1px; }
+.upcoming-badge { font-size:11px; font-weight:700; padding:3px 8px; border-radius:100px; background:rgba(123,110,246,.2); color:var(--accent2); white-space:nowrap; flex-shrink:0; }
+.upcoming-badge.urgent { background:rgba(245,101,101,.2); color:var(--red); }
+
+/* DATE GROUP */
+.date-group { margin-bottom:20px; }
+.date-group-header { padding:0 16px 8px; font-size:13px; font-weight:700; color:var(--text2); }
+.date-group-header.is-today { color:var(--accent2); }
+
+/* EMPTY */
+.empty-state { text-align:center; padding:3rem 2rem; }
+.empty-icon { font-size:48px; margin-bottom:1rem; opacity:.3; }
+.empty-title { font-size:16px; font-weight:600; margin-bottom:.4rem; }
+.empty-desc { font-size:13px; color:var(--text2); line-height:1.6; }
+
+/* BOTTOM NAV */
+.bottom-nav { position:fixed; bottom:0; left:0; right:0; height:calc(var(--nav-h) + var(--safe-bottom)); padding-bottom:var(--safe-bottom); background:rgba(13,13,20,.96); backdrop-filter:blur(30px); -webkit-backdrop-filter:blur(30px); border-top:1px solid var(--border); display:flex; align-items:flex-start; justify-content:space-around; z-index:100; padding-top:8px; }
+.nav-item { display:flex; flex-direction:column; align-items:center; gap:4px; padding:8px 20px; cursor:pointer; border:none; background:none; color:var(--text3); font-family:inherit; }
+.nav-item.active { color:var(--accent2); }
+.nav-icon { font-size:22px; line-height:1; }
+.nav-label { font-size:10px; font-weight:600; }
+
+/* FAB */
+.fab { position:fixed; bottom:calc(var(--nav-h) + var(--safe-bottom) + 16px); right:20px; width:56px; height:56px; border-radius:18px; background:var(--accent); border:none; color:#fff; font-size:26px; display:flex; align-items:center; justify-content:center; cursor:pointer; box-shadow:0 8px 24px rgba(123,110,246,.4); z-index:99; transition:transform .15s; }
+.fab:active { transform:scale(.92); }
+
+/* SETTINGS */
+.settings-wrap { padding:16px; display:flex; flex-direction:column; gap:12px; }
+.settings-section { background:var(--surface); border:1px solid var(--border); border-radius:18px; overflow:hidden; }
+.settings-section-title { font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.08em; color:var(--text3); padding:14px 16px 8px; }
+.settings-row { display:flex; align-items:center; justify-content:space-between; padding:13px 16px; border-top:1px solid var(--border); }
+.settings-row-left { display:flex; align-items:center; gap:10px; }
+.settings-row-icon { font-size:18px; width:28px; text-align:center; }
+.settings-row-label { font-size:14px; font-weight:500; }
+.settings-row-sub { font-size:12px; color:var(--text2); margin-top:1px; }
+.toggle { width:46px; height:26px; border-radius:13px; background:var(--surface3); position:relative; cursor:pointer; transition:background .2s; flex-shrink:0; }
+.toggle.on { background:var(--accent); }
+.toggle::after { content:''; position:absolute; top:3px; left:3px; width:20px; height:20px; background:#fff; border-radius:50%; transition:transform .2s; box-shadow:0 1px 4px rgba(0,0,0,.3); }
+.toggle.on::after { transform:translateX(20px); }
+
+/* WEEK VIEW */
+.week-wrap { overflow:auto; scrollbar-width:none; }
+.week-wrap::-webkit-scrollbar { display:none; }
+.week-days-header { display:grid; grid-template-columns:40px repeat(7,1fr); border-bottom:1px solid var(--border); background:var(--bg); position:sticky; top:0; z-index:10; }
+.week-time-col { border-right:1px solid var(--border); }
+.week-day-head { text-align:center; padding:8px 2px; border-right:1px solid var(--border); }
+.week-day-head:last-child { border-right:none; }
+.week-day-num { font-size:17px; font-weight:700; line-height:1; margin-bottom:2px; }
+.week-day-name { font-size:9px; color:var(--text2); text-transform:uppercase; font-weight:600; }
+.week-day-head.today .week-day-num { color:var(--accent2); }
+.week-day-head.today { background:var(--accent-dim); }
+.week-body { display:grid; grid-template-columns:40px repeat(7,1fr); }
+.week-hour-label { border-right:1px solid var(--border); height:48px; display:flex; align-items:flex-start; justify-content:flex-end; padding:3px 4px 0 0; font-size:9px; color:var(--text3); background:var(--bg); }
+.week-cell { border-right:1px solid var(--border); border-bottom:1px solid rgba(255,255,255,.03); height:48px; position:relative; }
+.week-cell:last-child { border-right:none; }
+.week-cell.today-col { background:rgba(123,110,246,.02); }
+.week-event { position:absolute; left:1px; right:1px; border-radius:5px; padding:2px 3px; font-size:9px; font-weight:600; overflow:hidden; cursor:pointer; z-index:5; line-height:1.3; }
+.now-line { position:absolute; left:0; right:0; height:2px; background:var(--red); z-index:10; }
+.now-line::before { content:''; position:absolute; left:-4px; top:-4px; width:10px; height:10px; background:var(--red); border-radius:50%; }
+
+/* MODAL */
+.modal-overlay { position:fixed; inset:0; background:rgba(0,0,0,.75); backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px); z-index:200; display:none; align-items:flex-end; }
+.modal-overlay.open { display:flex; }
+.modal-sheet { width:100%; background:var(--surface); border-radius:24px 24px 0 0; padding-bottom:calc(20px + var(--safe-bottom)); max-height:92vh; overflow-y:auto; animation:slideUp .3s cubic-bezier(.32,.72,0,1); }
+@keyframes slideUp { from{transform:translateY(100%)} to{transform:translateY(0)} }
+.modal-handle { width:40px; height:4px; background:var(--surface3); border-radius:2px; margin:12px auto 0; }
+.modal-header { display:flex; align-items:center; justify-content:space-between; padding:16px 20px; }
+.modal-title { font-size:18px; font-weight:700; }
+.modal-close { width:32px; height:32px; border-radius:10px; border:none; background:var(--surface2); color:var(--text2); font-size:18px; cursor:pointer; display:flex; align-items:center; justify-content:center; }
+.form-body { padding:0 20px; }
+.form-group { margin-bottom:16px; }
+.form-label { display:block; font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.07em; color:var(--text2); margin-bottom:6px; }
+.form-input { width:100%; padding:12px 14px; background:var(--surface2); border:1px solid var(--border2); border-radius:14px; color:var(--text); font-size:15px; font-family:inherit; outline:none; transition:border-color .15s; -webkit-appearance:none; }
+.form-input:focus { border-color:var(--accent); }
+.form-row { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+.color-picker { display:flex; gap:10px; flex-wrap:wrap; }
+.color-swatch { width:34px; height:34px; border-radius:10px; cursor:pointer; border:3px solid transparent; transition:all .1s; }
+.color-swatch.selected { border-color:#fff; transform:scale(1.1); }
+.modal-actions { display:flex; gap:10px; padding:16px 20px 0; }
+.btn-primary { flex:1; padding:14px; background:var(--accent); color:#fff; border:none; border-radius:14px; font-size:15px; font-weight:600; font-family:inherit; cursor:pointer; }
+.btn-primary:active { opacity:.8; }
+.btn-secondary { padding:14px 20px; background:var(--surface2); color:var(--text2); border:1px solid var(--border2); border-radius:14px; font-size:15px; font-weight:600; font-family:inherit; cursor:pointer; }
+.btn-danger { padding:14px 20px; background:rgba(245,101,101,.12); color:var(--red); border:1px solid rgba(245,101,101,.2); border-radius:14px; font-size:15px; font-weight:600; font-family:inherit; cursor:pointer; }
+
+/* DETAIL */
+.detail-color-bar { height:5px; margin:0 20px; border-radius:3px; }
+.detail-title { font-size:22px; font-weight:700; padding:14px 20px 4px; letter-spacing:-.3px; }
+.detail-rows { padding:8px 20px; display:flex; flex-direction:column; gap:14px; }
+.detail-row { display:flex; align-items:flex-start; gap:12px; }
+.detail-row-icon { font-size:18px; margin-top:1px; flex-shrink:0; }
+.detail-row-text { font-size:14px; color:var(--text2); line-height:1.5; }
+.detail-actions { display:flex; gap:10px; padding:16px 20px 0; }
+
+/* NOTIF BAR */
+.notif-bar { margin:0 16px 4px; display:flex; align-items:center; gap:10px; padding:12px 14px; background:rgba(123,110,246,.1); border:1px solid rgba(123,110,246,.2); border-radius:16px; }
+.notif-bar-text { flex:1; font-size:12px; color:var(--text2); line-height:1.4; }
+.notif-bar-text b { color:var(--accent2); }
+.notif-bar-btn { padding:6px 12px; background:var(--accent); color:#fff; border:none; border-radius:100px; font-size:12px; font-weight:600; font-family:inherit; cursor:pointer; white-space:nowrap; flex-shrink:0; }
+
+/* TOAST */
+.toast-wrap { position:fixed; top:calc(var(--safe-top) + 76px); left:50%; transform:translateX(-50%); z-index:9999; display:flex; flex-direction:column; align-items:center; gap:8px; pointer-events:none; }
+.toast { display:flex; align-items:center; gap:8px; padding:10px 16px; background:var(--surface3); border:1px solid var(--border2); border-radius:100px; font-size:13px; font-weight:500; white-space:nowrap; box-shadow:0 8px 24px rgba(0,0,0,.4); animation:toastIn .3s cubic-bezier(.34,1.56,.64,1); }
+@keyframes toastIn { from{opacity:0;transform:translateY(-12px) scale(.9)} to{opacity:1;transform:translateY(0) scale(1)} }
 </style>
 </head>
 <body>
-<div class="app">
 
-  <!-- Header -->
-  <header>
-    <div class="logo">
-      <div class="logo-icon">📅</div>
-      <div class="logo-text">일정<span>관리</span></div>
+<div class="screen active" id="auth-screen">
+  <div class="auth-bg"></div>
+  <div class="auth-card">
+    <div class="auth-logo">📅</div>
+    <h1>일정 관리</h1>
+    <p>구글 캘린더와 연동해서<br>모든 일정을 한 눈에 확인하세요</p>
+    <button class="btn-google" onclick="startGoogleAuth()">
+      <svg width="20" height="20" viewBox="0 0 24 24">
+        <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+        <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+        <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+        <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+      </svg>
+      Google로 시작하기
+    </button>
+    <button class="demo-btn" onclick="startDemo()">데모로 둘러보기</button>
+  </div>
+</div>
+
+<div class="screen" id="main-app">
+  <div class="app-header">
+    <div>
+      <div class="header-month" id="headerMonth"></div>
     </div>
-    <div class="header-actions">
-      <div class="sync-status" id="syncStatus">
+    <div class="header-right">
+      <div class="sync-pill">
         <div class="sync-dot" id="syncDot"></div>
-        <span id="syncText">연결 대기</span>
+        <span id="syncText">동기화됨</span>
       </div>
-      <button class="btn-icon" onclick="openSettings()" title="설정">⚙️</button>
-      <button class="btn btn-primary" onclick="openAddEvent()" id="addBtn" style="display:none">+ 일정 추가</button>
-      <button class="btn btn-ghost" onclick="logout()" id="logoutBtn" style="display:none">로그아웃</button>
-    </div>
-  </header>
-
-  <!-- Notification bar -->
-  <div class="notif-bar" id="notifBar" style="display:none">
-    <div class="notif-bar-icon">🔔</div>
-    <div class="notif-bar-text">
-      <strong>알림 권한</strong>이 필요합니다. 임박한 일정을 스마트폰 잠금화면에서 받으려면 알림을 허용해주세요.
-    </div>
-    <button class="btn btn-primary" onclick="requestNotification()" style="white-space:nowrap; font-size:12px; padding:6px 12px">허용하기</button>
-    <button class="btn-icon" onclick="document.getElementById('notifBar').style.display='none'" style="font-size:16px">✕</button>
-  </div>
-
-  <!-- Auth screen -->
-  <div id="auth-screen">
-    <div class="auth-card">
-      <div class="auth-icon">📅</div>
-      <h2>일정 관리 시작하기</h2>
-      <p>구글 캘린더와 연동하여<br>모든 일정을 한 곳에서 관리하세요</p>
-
-      <button class="btn-google" onclick="startGoogleAuth()">
-        <svg class="google-icon" viewBox="0 0 24 24">
-          <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
-          <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
-          <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
-          <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
-        </svg>
-        Google 계정으로 연결하기
-      </button>
-
-      <div class="setup-notice">
-        ⚠️ <strong>개발자 설정 필요:</strong> 실제 구글 캘린더 연동을 위해서는 <code>Google Cloud Console</code>에서 OAuth 2.0 클라이언트 ID를 발급받아 아래 스크립트의 <code>CLIENT_ID</code>를 교체해야 합니다. 지금은 데모 모드로 실행됩니다.
-      </div>
+      <button class="icon-btn" onclick="syncNow()">🔄</button>
     </div>
   </div>
 
-  <!-- Main App -->
-  <div id="main-app">
-    <div class="app-layout">
-      <!-- Sidebar -->
-      <aside class="sidebar">
-        <!-- Mini calendar -->
-        <div class="mini-cal">
-          <div class="mini-cal-header">
-            <span class="mini-cal-title" id="miniCalTitle"></span>
-            <div class="mini-cal-nav">
-              <button onclick="miniCalNav(-1)">‹</button>
-              <button onclick="miniCalNav(1)">›</button>
-            </div>
-          </div>
-          <div class="mini-cal-grid" id="miniCalGrid"></div>
+  <div class="scroll-area" id="scrollArea">
+
+    <div id="page-home">
+      <div class="mini-cal-wrap">
+        <div class="mini-cal-header">
+          <button class="mini-cal-nav-btn" onclick="miniCalNav(-1)">‹</button>
+          <span id="miniCalTitle" style="font-size:15px;font-weight:700;"></span>
+          <button class="mini-cal-nav-btn" onclick="miniCalNav(1)">›</button>
         </div>
-
-        <!-- Upcoming events -->
-        <div class="sidebar-section">
-          <div class="sidebar-section-title">임박한 일정</div>
-          <div class="upcoming-list" id="upcomingList"></div>
+        <div class="mini-cal-grid" id="miniCalGrid"></div>
+      </div>
+      <div class="divider"></div>
+      <div id="notifBar" style="display:none;padding-top:12px;">
+        <div class="notif-bar">
+          <span style="font-size:20px;">🔔</span>
+          <div class="notif-bar-text"><b>알림 허용</b>이 필요합니다<br>잠금화면 알림을 받으려면 허용해주세요</div>
+          <button class="notif-bar-btn" onclick="requestNotifPermission()">허용</button>
         </div>
-
-        <!-- Add event -->
-        <button class="add-event-btn" onclick="openAddEvent()">
-          <span>＋</span>
-          <span>새 일정 추가</span>
-        </button>
-
-        <!-- Notification settings -->
-        <div class="sidebar-section">
-          <div class="sidebar-section-title">알림 설정</div>
-          <div class="config-panel" style="padding: 0.75rem; margin-bottom: 0;">
-            <div class="config-row">
-              <label>10분 전 알림</label>
-              <div class="toggle on" id="notif10" onclick="toggleNotif(this)"></div>
-            </div>
-            <div class="config-row">
-              <label>30분 전 알림</label>
-              <div class="toggle on" id="notif30" onclick="toggleNotif(this)"></div>
-            </div>
-            <div class="config-row">
-              <label>1시간 전 알림</label>
-              <div class="toggle" id="notif60" onclick="toggleNotif(this)"></div>
-            </div>
-          </div>
-        </div>
-      </aside>
-
-      <!-- Main content -->
-      <main class="main-content">
-        <div class="view-bar">
-          <div class="view-title" id="viewTitle"></div>
-          <div style="display:flex; align-items:center; gap:10px;">
-            <div class="view-tabs">
-              <button class="view-tab active" onclick="setView('week', this)">주간</button>
-              <button class="view-tab" onclick="setView('day', this)">일간</button>
-              <button class="view-tab" onclick="setView('list', this)">목록</button>
-            </div>
-            <button class="btn-icon" onclick="navDate(-1)">‹</button>
-            <button class="btn btn-ghost" onclick="goToday()" style="font-size:12px; padding:6px 14px;">오늘</button>
-            <button class="btn-icon" onclick="navDate(1)">›</button>
-            <button class="btn-icon" onclick="syncNow()" title="동기화">🔄</button>
-          </div>
-        </div>
-
-        <div id="calendarView"></div>
-      </main>
+      </div>
+      <div id="upcomingSection">
+        <div class="section-hdr"><div class="section-title">⚡ 임박한 일정</div></div>
+        <div id="upcomingList" style="padding:0 16px 4px;"></div>
+      </div>
+      <div class="divider" style="margin:8px 0;"></div>
+      <div class="section-hdr">
+        <div class="section-title" id="selectedDayTitle">오늘 일정</div>
+        <button class="section-link" onclick="setPage('list')">전체 보기</button>
+      </div>
+      <div class="events-list" id="dayEventsList"></div>
+      <div style="height:20px;"></div>
     </div>
+
+    <div id="page-list" style="display:none;padding:12px 0;">
+      <div class="tab-bar">
+        <button class="tab-btn active" onclick="setListFilter('upcoming',this)">다가오는</button>
+        <button class="tab-btn" onclick="setListFilter('today',this)">오늘</button>
+        <button class="tab-btn" onclick="setListFilter('week',this)">이번 주</button>
+        <button class="tab-btn" onclick="setListFilter('all',this)">전체</button>
+      </div>
+      <div id="listContent"></div>
+    </div>
+
+    <div id="page-week" style="display:none;">
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px 8px;">
+        <button class="icon-btn" onclick="navWeek(-1)">‹</button>
+        <span id="weekTitle" style="font-size:14px;font-weight:600;color:var(--text2);"></span>
+        <button class="icon-btn" onclick="navWeek(1)">›</button>
+      </div>
+      <div class="week-wrap" id="weekWrap" style="max-height:calc(100vh - 220px);">
+        <div id="weekGrid"></div>
+      </div>
+    </div>
+
+    <div id="page-settings" style="display:none;">
+      <div class="settings-wrap">
+        <div style="font-size:20px;font-weight:700;padding:4px 0 8px;">설정</div>
+        <div class="settings-section">
+          <div class="settings-section-title">알림</div>
+          <div class="settings-row">
+            <div class="settings-row-left">
+              <div class="settings-row-icon">⏰</div>
+              <div><div class="settings-row-label">10분 전 알림</div></div>
+            </div>
+            <div class="toggle on" id="notif10" onclick="toggleNotif(this,10)"></div>
+          </div>
+          <div class="settings-row">
+            <div class="settings-row-left">
+              <div class="settings-row-icon">🔔</div>
+              <div><div class="settings-row-label">30분 전 알림</div></div>
+            </div>
+            <div class="toggle on" id="notif30" onclick="toggleNotif(this,30)"></div>
+          </div>
+          <div class="settings-row">
+            <div class="settings-row-left">
+              <div class="settings-row-icon">📢</div>
+              <div><div class="settings-row-label">1시간 전 알림</div></div>
+            </div>
+            <div class="toggle" id="notif60" onclick="toggleNotif(this,60)"></div>
+          </div>
+        </div>
+        <div class="settings-section">
+          <div class="settings-section-title">계정</div>
+          <div class="settings-row">
+            <div class="settings-row-left">
+              <div class="settings-row-icon">🔄</div>
+              <div>
+                <div class="settings-row-label">지금 동기화</div>
+                <div class="settings-row-sub">구글 캘린더에서 일정 가져오기</div>
+              </div>
+            </div>
+            <button class="icon-btn" onclick="syncNow()">🔄</button>
+          </div>
+          <div class="settings-row">
+            <div class="settings-row-left">
+              <div class="settings-row-icon">🚪</div>
+              <div><div class="settings-row-label">로그아웃</div></div>
+            </div>
+            <button class="icon-btn" onclick="logout()" style="color:var(--red);">→</button>
+          </div>
+        </div>
+        <div class="settings-section">
+          <div class="settings-section-title">앱 정보</div>
+          <div class="settings-row">
+            <div class="settings-row-left">
+              <div class="settings-row-icon">📅</div>
+              <div>
+                <div class="settings-row-label">일정 관리</div>
+                <div class="settings-row-sub">버전 2.0 · Google Calendar 연동</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
   </div>
 
-  <!-- Toast container -->
-  <div class="toast-container" id="toastContainer"></div>
+  <nav class="bottom-nav">
+    <button class="nav-item active" id="nav-home" onclick="setPage('home')">
+      <div class="nav-icon">🏠</div><div class="nav-label">홈</div>
+    </button>
+    <button class="nav-item" id="nav-list" onclick="setPage('list')">
+      <div class="nav-icon">📋</div><div class="nav-label">일정</div>
+    </button>
+    <button class="nav-item" id="nav-week" onclick="setPage('week')">
+      <div class="nav-icon">📆</div><div class="nav-label">주간</div>
+    </button>
+    <button class="nav-item" id="nav-settings" onclick="setPage('settings')">
+      <div class="nav-icon">⚙️</div><div class="nav-label">설정</div>
+    </button>
+  </nav>
+  <button class="fab" onclick="openAddEvent()">＋</button>
+</div>
 
-  <!-- Add Event Modal -->
-  <div class="modal-overlay" id="eventModal">
-    <div class="modal">
-      <div class="modal-header">
-        <div class="modal-title" id="modalTitle">새 일정 추가</div>
-        <button class="modal-close" onclick="closeModal()">×</button>
-      </div>
+<div class="toast-wrap" id="toastWrap"></div>
+
+<div class="modal-overlay" id="eventModal">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-header">
+      <div class="modal-title" id="modalTitle">새 일정</div>
+      <button class="modal-close" onclick="closeModal('eventModal')">✕</button>
+    </div>
+    <div class="form-body">
       <div class="form-group">
         <label class="form-label">제목</label>
-        <input class="form-input" type="text" id="evTitle" placeholder="일정 제목">
+        <input class="form-input" type="text" id="evTitle" placeholder="일정 제목 입력">
       </div>
       <div class="form-row">
         <div class="form-group">
@@ -996,8 +411,8 @@
           <input class="form-input" type="date" id="evDate">
         </div>
         <div class="form-group">
-          <label class="form-label">종류</label>
-          <select class="form-input" id="evAllDay">
+          <label class="form-label">유형</label>
+          <select class="form-input" id="evAllDay" onchange="toggleTimeRow()">
             <option value="false">시간 지정</option>
             <option value="true">하루 종일</option>
           </select>
@@ -1005,721 +420,368 @@
       </div>
       <div class="form-row" id="timeRow">
         <div class="form-group">
-          <label class="form-label">시작 시간</label>
+          <label class="form-label">시작</label>
           <input class="form-input" type="time" id="evStart">
         </div>
         <div class="form-group">
-          <label class="form-label">종료 시간</label>
+          <label class="form-label">종료</label>
           <input class="form-input" type="time" id="evEnd">
         </div>
       </div>
       <div class="form-group">
         <label class="form-label">장소</label>
-        <input class="form-input" type="text" id="evLocation" placeholder="장소 (선택사항)">
+        <input class="form-input" type="text" id="evLocation" placeholder="장소 (선택)">
       </div>
       <div class="form-group">
         <label class="form-label">메모</label>
-        <textarea class="form-input" id="evDesc" placeholder="메모 (선택사항)" rows="2" style="resize:none"></textarea>
+        <textarea class="form-input" id="evDesc" rows="2" placeholder="메모 (선택)" style="resize:none"></textarea>
       </div>
       <div class="form-group">
         <label class="form-label">색상</label>
         <div class="color-picker" id="colorPicker"></div>
       </div>
-      <div class="modal-actions">
-        <button class="btn btn-ghost" onclick="closeModal()">취소</button>
-        <button class="btn btn-primary" onclick="saveEvent()">저장</button>
-      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-secondary" onclick="closeModal('eventModal')">취소</button>
+      <button class="btn-primary" onclick="saveEvent()">저장하기</button>
     </div>
   </div>
+</div>
 
+<div class="modal-overlay" id="detailModal">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div id="detailContent"></div>
+  </div>
 </div>
 
 <script>
-// ========== CONFIG ==========
-const CLIENT_ID = '1037393628106-kmbm5qmfnoa2bea48fijcmatn89mq3ic.apps.googleusercontent.com';
-const API_KEY = 'AIzaSyBQgx6O3jYk-s3-3w6hB-2_YaH3GNE1048';
+const CLIENT_ID = 'YOUR_GOOGLE_CLIENT_ID';
+const API_KEY = 'YOUR_GOOGLE_API_KEY';
 const SCOPES = 'https://www.googleapis.com/auth/calendar';
-const DEMO_MODE = false; // Client ID 미설정 시 데모 모드
+const DEMO_MODE = CLIENT_ID === 'YOUR_GOOGLE_CLIENT_ID';
 
-// ========== STATE ==========
-let currentDate = new Date();
-let selectedDate = new Date();
-let miniCalDate = new Date();
-let currentView = 'week';
-let events = [];
-let notifSettings = { 10: true, 30: true, 60: false };
-let scheduledNotifs = new Map();
-let syncInterval = null;
-let editingEventId = null;
-let isAuthenticated = false;
+let events = [], selectedDate = new Date(), miniCalDate = new Date(), weekDate = new Date();
+let currentPage = 'home', listFilter = 'upcoming', editingId = null, isAuthenticated = false;
+let notifSettings = {10:true,30:true,60:false}, scheduledNotifs = new Map(), syncInterval = null;
+let selectedColor = '#7b6ef6';
 
-const COLORS = [
-  { hex: '#7c6ff7', name: '보라' },
-  { hex: '#4eca8b', name: '초록' },
-  { hex: '#f76f6f', name: '빨강' },
-  { hex: '#6fb8f7', name: '파랑' },
-  { hex: '#f7bc6f', name: '주황' },
-  { hex: '#f76fb8', name: '분홍' },
-  { hex: '#a8f76f', name: '연두' },
-  { hex: '#f7f76f', name: '노랑' },
-];
-let selectedColor = COLORS[0].hex;
+const COLORS = ['#7b6ef6','#4dd696','#f56565','#5bb5f7','#f6a93b','#f56eb5','#a8f46f','#f5f56f'];
 
-// ========== DEMO DATA ==========
-function generateDemoEvents() {
-  const now = new Date();
-  const y = now.getFullYear(), m = now.getMonth(), d = now.getDate();
+function genDemo() {
+  const n=new Date(),y=n.getFullYear(),m=n.getMonth(),d=n.getDate();
   return [
-    { id: 'e1', title: '팀 주간 회의', start: new Date(y,m,d,10,0), end: new Date(y,m,d,11,0), color: '#7c6ff7', location: '회의실 A', desc: '주간 업무 보고', allDay: false },
-    { id: 'e2', title: '점심 약속', start: new Date(y,m,d,12,30), end: new Date(y,m,d,13,30), color: '#4eca8b', location: '회사 근처 식당', desc: '', allDay: false },
-    { id: 'e3', title: '디자인 리뷰', start: new Date(y,m,d,15,0), end: new Date(y,m,d,16,0), color: '#6fb8f7', location: '온라인', desc: 'Figma 링크 공유 예정', allDay: false },
-    { id: 'e4', title: '프로젝트 마감', start: new Date(y,m,d+1,18,0), end: new Date(y,m,d+1,19,0), color: '#f76f6f', location: '', desc: 'v2.0 출시', allDay: false },
-    { id: 'e5', title: '친구 생일', start: new Date(y,m,d+2), end: new Date(y,m,d+2), color: '#f76fb8', location: '', desc: '선물 준비!', allDay: true },
-    { id: 'e6', title: '개발 미팅', start: new Date(y,m,d-1,9,0), end: new Date(y,m,d-1,10,0), color: '#7c6ff7', location: '온라인', desc: '', allDay: false },
-    { id: 'e7', title: '운동', start: new Date(y,m,d,7,0), end: new Date(y,m,d,8,0), color: '#a8f76f', location: '헬스장', desc: '', allDay: false },
-    { id: 'e8', title: '독서 모임', start: new Date(y,m,d+3,19,0), end: new Date(y,m,d+3,21,0), color: '#f7bc6f', location: '카페', desc: '이번 달 책: 채식주의자', allDay: false },
+    {id:'d1',title:'팀 회의',start:new Date(y,m,d,10,0),end:new Date(y,m,d,11,0),color:'#7b6ef6',location:'회의실 A',desc:'주간 업무 보고',allDay:false},
+    {id:'d2',title:'점심 약속',start:new Date(y,m,d,12,30),end:new Date(y,m,d,13,30),color:'#4dd696',location:'강남 식당',desc:'',allDay:false},
+    {id:'d3',title:'디자인 리뷰',start:new Date(y,m,d,15,0),end:new Date(y,m,d,16,0),color:'#5bb5f7',location:'온라인',desc:'',allDay:false},
+    {id:'d4',title:'프로젝트 마감',start:new Date(y,m,d+1,18,0),end:new Date(y,m,d+1,19,0),color:'#f56565',location:'',desc:'v2.0 출시',allDay:false},
+    {id:'d5',title:'친구 생일 🎂',start:new Date(y,m,d+2),end:new Date(y,m,d+2),color:'#f56eb5',location:'',desc:'선물 준비!',allDay:true},
+    {id:'d6',title:'운동',start:new Date(y,m,d,7,0),end:new Date(y,m,d,8,0),color:'#a8f46f',location:'헬스장',desc:'',allDay:false},
+    {id:'d7',title:'독서 모임',start:new Date(y,m,d+3,19,0),end:new Date(y,m,d+3,21,0),color:'#f6a93b',location:'카페',desc:'',allDay:false},
   ];
 }
 
-// ========== GOOGLE AUTH ==========
 function startGoogleAuth() {
-  if (DEMO_MODE || CLIENT_ID === 'YOUR_GOOGLE_CLIENT_ID') {
-    // Demo mode
-    events = generateDemoEvents();
-    isAuthenticated = true;
-    showApp();
-    toast('🎭 데모 모드로 실행 중입니다', 'info');
-    return;
-  }
+  if (DEMO_MODE) { startDemo(); return; }
+  const url = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${CLIENT_ID}&redirect_uri=${encodeURIComponent('https://gudae3047.github.io/calender-app/')}&response_type=token&scope=${encodeURIComponent(SCOPES)}`;
+  window.location.href = url;
+}
 
-  // Real Google OAuth
-  const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?` +
-    `client_id=${CLIENT_ID}&redirect_uri=${encodeURIComponent('https://gudae3047.github.io/calender-app/')}&` +
-    `response_type=token&scope=${encodeURIComponent(SCOPES)}`;
-  window.location.href = authUrl;
+function startDemo() {
+  events = genDemo(); isAuthenticated = true;
+  showApp(); toast('데모 모드로 실행 중입니다 🎭');
 }
 
 function showApp() {
-  document.getElementById('auth-screen').style.display = 'none';
-  document.getElementById('main-app').style.display = 'flex';
-  document.getElementById('addBtn').style.display = '';
-  document.getElementById('logoutBtn').style.display = '';
-
-  setSyncStatus('synced');
-  renderAll();
-  requestNotification();
-  startAutoSync();
+  document.getElementById('auth-screen').classList.remove('active');
+  document.getElementById('main-app').classList.add('active');
+  renderAll(); checkNotifPermission();
+  if (!DEMO_MODE) startAutoSync();
 }
 
 function logout() {
-  isAuthenticated = false;
-  events = [];
+  localStorage.removeItem('gToken'); isAuthenticated = false; events = [];
   clearInterval(syncInterval);
-  document.getElementById('auth-screen').style.display = '';
-  document.getElementById('main-app').style.display = 'none';
-  document.getElementById('addBtn').style.display = 'none';
-  document.getElementById('logoutBtn').style.display = 'none';
-  setSyncStatus('waiting');
+  document.getElementById('main-app').classList.remove('active');
+  document.getElementById('auth-screen').classList.add('active');
 }
 
-// ========== GOOGLE CALENDAR API ==========
 async function fetchGoogleEvents() {
   if (DEMO_MODE || !isAuthenticated) return;
-
+  const token = localStorage.getItem('gToken'); if (!token) return;
   setSyncStatus('syncing');
   try {
-    const token = localStorage.getItem('gToken');
-    if (!token) return;
-
     const now = new Date();
-    const min = new Date(now.getFullYear(), now.getMonth() - 1, 1).toISOString();
-    const max = new Date(now.getFullYear(), now.getMonth() + 3, 0).toISOString();
-
-    const res = await fetch(
-      `https://www.googleapis.com/calendar/v3/calendars/primary/events?timeMin=${min}&timeMax=${max}&singleEvents=true&orderBy=startTime&key=${API_KEY}`,
-      { headers: { Authorization: `Bearer ${token}` } }
-    );
+    const min = new Date(now.getFullYear(),now.getMonth()-1,1).toISOString();
+    const max = new Date(now.getFullYear(),now.getMonth()+3,0).toISOString();
+    const res = await fetch(`https://www.googleapis.com/calendar/v3/calendars/primary/events?timeMin=${min}&timeMax=${max}&singleEvents=true&orderBy=startTime&key=${API_KEY}`,{headers:{Authorization:`Bearer ${token}`}});
     const data = await res.json();
-
-    events = data.items.map(item => ({
-      id: item.id,
-      title: item.summary || '(제목 없음)',
-      start: item.start.dateTime ? new Date(item.start.dateTime) : new Date(item.start.date),
-      end: item.end.dateTime ? new Date(item.end.dateTime) : new Date(item.end.date),
-      allDay: !item.start.dateTime,
-      location: item.location || '',
-      desc: item.description || '',
-      color: '#7c6ff7'
+    if (data.error) { setSyncStatus('error'); return; }
+    events = (data.items||[]).map(i=>({
+      id:i.id, title:i.summary||'(제목 없음)',
+      start:i.start.dateTime?new Date(i.start.dateTime):new Date(i.start.date),
+      end:i.end.dateTime?new Date(i.end.dateTime):new Date(i.end.date),
+      allDay:!i.start.dateTime, location:i.location||'', desc:i.description||'', color:'#7b6ef6'
     }));
-
-    setSyncStatus('synced');
-    renderAll();
-    scheduleAllNotifications();
-  } catch (e) {
-    setSyncStatus('error');
-    console.error(e);
-  }
+    setSyncStatus('synced'); renderAll(); scheduleNotifs();
+  } catch(e) { setSyncStatus('error'); }
 }
 
-async function addEventToGoogle(ev) {
-  if (DEMO_MODE || !isAuthenticated) return null;
-
+async function addToGoogle(ev) {
+  if (DEMO_MODE) return;
   const token = localStorage.getItem('gToken');
-  const body = {
-    summary: ev.title,
-    location: ev.location,
-    description: ev.desc,
-    start: ev.allDay ? { date: formatDate(ev.start) } : { dateTime: ev.start.toISOString() },
-    end: ev.allDay ? { date: formatDate(ev.end) } : { dateTime: ev.end.toISOString() },
-  };
-
-  const res = await fetch(
-    `https://www.googleapis.com/calendar/v3/calendars/primary/events?key=${API_KEY}`,
-    {
-      method: 'POST',
-      headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify(body)
-    }
-  );
-  return await res.json();
+  await fetch(`https://www.googleapis.com/calendar/v3/calendars/primary/events?key=${API_KEY}`,{
+    method:'POST', headers:{Authorization:`Bearer ${token}`,'Content-Type':'application/json'},
+    body:JSON.stringify({summary:ev.title,location:ev.location,description:ev.desc,
+      start:ev.allDay?{date:fmtDate(ev.start)}:{dateTime:ev.start.toISOString()},
+      end:ev.allDay?{date:fmtDate(ev.end)}:{dateTime:ev.end.toISOString()}})
+  });
 }
 
-// ========== SYNC ==========
-function startAutoSync() {
-  fetchGoogleEvents();
-  syncInterval = setInterval(fetchGoogleEvents, 60000); // every 60s
-  setSyncStatus('synced');
+async function deleteFromGoogle(id) {
+  if (DEMO_MODE) return;
+  const token = localStorage.getItem('gToken');
+  await fetch(`https://www.googleapis.com/calendar/v3/calendars/primary/events/${id}?key=${API_KEY}`,{method:'DELETE',headers:{Authorization:`Bearer ${token}`}});
 }
+
+function startAutoSync() { fetchGoogleEvents(); syncInterval = setInterval(fetchGoogleEvents,60000); }
 
 function syncNow() {
-  if (DEMO_MODE) {
-    setSyncStatus('syncing');
-    setTimeout(() => {
-      setSyncStatus('synced');
-      toast('✓ 동기화 완료', 'success');
-    }, 1200);
-    return;
-  }
+  if (DEMO_MODE) { setSyncStatus('syncing'); setTimeout(()=>{setSyncStatus('synced');toast('✓ 동기화 완료');},1000); return; }
   fetchGoogleEvents();
 }
 
-function setSyncStatus(status) {
-  const dot = document.getElementById('syncDot');
-  const text = document.getElementById('syncText');
-  dot.className = 'sync-dot';
-  if (status === 'syncing') {
-    dot.classList.add('syncing');
-    text.textContent = '동기화 중...';
-  } else if (status === 'synced') {
-    dot.style.background = 'var(--green)';
-    text.textContent = '동기화됨';
-  } else if (status === 'error') {
-    dot.style.background = 'var(--red)';
-    text.textContent = '오류';
-  } else {
-    dot.style.background = 'var(--text3)';
-    text.textContent = '연결 대기';
-  }
+function setSyncStatus(s) {
+  const dot=document.getElementById('syncDot'), txt=document.getElementById('syncText');
+  dot.className='sync-dot'+(s==='syncing'?' syncing':'');
+  dot.style.background=s==='synced'?'var(--green)':s==='error'?'var(--red)':'';
+  txt.textContent=s==='synced'?'동기화됨':s==='syncing'?'동기화 중...':'오류';
 }
 
-// ========== NOTIFICATIONS ==========
-function requestNotification() {
-  if (!('Notification' in window)) {
-    document.getElementById('notifBar').style.display = 'none';
-    return;
-  }
-  if (Notification.permission === 'default') {
-    document.getElementById('notifBar').style.display = 'flex';
-  } else {
-    document.getElementById('notifBar').style.display = 'none';
-    if (Notification.permission === 'granted') scheduleAllNotifications();
-  }
-}
-
-async function requestNotification() {
+function checkNotifPermission() {
   if (!('Notification' in window)) return;
-  const perm = await Notification.requestPermission();
-  document.getElementById('notifBar').style.display = 'none';
-  if (perm === 'granted') {
-    scheduleAllNotifications();
-    toast('🔔 알림이 활성화되었습니다', 'success');
-  }
+  document.getElementById('notifBar').style.display = Notification.permission==='default'?'block':'none';
+  if (Notification.permission==='granted') scheduleNotifs();
 }
 
-function scheduleAllNotifications() {
-  if (Notification.permission !== 'granted') return;
-  scheduledNotifs.forEach(t => clearTimeout(t));
-  scheduledNotifs.clear();
+async function requestNotifPermission() {
+  const p = await Notification.requestPermission();
+  document.getElementById('notifBar').style.display='none';
+  if (p==='granted') { scheduleNotifs(); toast('🔔 알림이 활성화됐습니다!'); }
+}
 
-  const now = Date.now();
-  const intervals = Object.entries(notifSettings)
-    .filter(([,v]) => v)
-    .map(([k]) => parseInt(k));
-
-  events.forEach(ev => {
+function scheduleNotifs() {
+  if (Notification.permission!=='granted') return;
+  scheduledNotifs.forEach(t=>clearTimeout(t)); scheduledNotifs.clear();
+  const now=Date.now(), mins=Object.entries(notifSettings).filter(([,v])=>v).map(([k])=>parseInt(k));
+  events.forEach(ev=>{
     if (ev.allDay) return;
-    intervals.forEach(mins => {
-      const triggerTime = ev.start.getTime() - mins * 60000;
-      const delay = triggerTime - now;
-      if (delay > 0 && delay < 24 * 3600000) {
-        const t = setTimeout(() => {
-          sendNotification(ev, mins);
-        }, delay);
-        scheduledNotifs.set(`${ev.id}-${mins}`, t);
+    mins.forEach(m=>{
+      const delay=ev.start.getTime()-m*60000-now;
+      if (delay>0 && delay<24*3600000) {
+        const t=setTimeout(()=>new Notification(`📅 ${ev.title}`,{body:`${m}분 후 시작${ev.location?' · '+ev.location:''}`,icon:'icon-192.png',badge:'icon-72.png',tag:ev.id+'-'+m,vibrate:[200,100,200],requireInteraction:m<=10}),delay);
+        scheduledNotifs.set(`${ev.id}-${m}`,t);
       }
     });
   });
 }
 
-function sendNotification(ev, minsLeft) {
-  if (Notification.permission !== 'granted') return;
-  const notif = new Notification(`📅 ${ev.title}`, {
-    body: `${minsLeft}분 후 시작${ev.location ? ' · ' + ev.location : ''}`,
-    icon: 'icon-192.png',
-    badge: 'icon-72.png',
-    tag: ev.id,
-    vibrate: [200, 100, 200],
-    requireInteraction: minsLeft <= 10,
+function toggleNotif(el,mins) { el.classList.toggle('on'); notifSettings[mins]=el.classList.contains('on'); scheduleNotifs(); }
+
+function setPage(page) {
+  ['home','list','week','settings'].forEach(p=>{
+    document.getElementById('page-'+p).style.display=p===page?'':'none';
+    const nav=document.getElementById('nav-'+p);
+    if(nav) nav.classList.toggle('active',p===page);
   });
-  notif.onclick = () => { window.focus(); };
+  currentPage=page;
+  document.getElementById('scrollArea').scrollTop=0;
+  if(page==='list') renderList();
+  if(page==='week') renderWeek();
+  updateHeader();
 }
 
-function toggleNotif(el) {
-  el.classList.toggle('on');
-  const map = { notif10: 10, notif30: 30, notif60: 60 };
-  const mins = map[el.id];
-  notifSettings[mins] = el.classList.contains('on');
-  scheduleAllNotifications();
+function updateHeader() {
+  document.getElementById('headerMonth').textContent=`${selectedDate.getFullYear()}년 ${selectedDate.getMonth()+1}월`;
 }
 
-// ========== RENDER ==========
 function renderAll() {
-  renderMiniCal();
-  renderUpcoming();
-  renderMainView();
+  renderMiniCal(); renderUpcoming(); renderDayEvents(); updateHeader();
+  if(currentPage==='list') renderList();
+  if(currentPage==='week') renderWeek();
 }
 
-// Mini calendar
 function renderMiniCal() {
-  const y = miniCalDate.getFullYear(), m = miniCalDate.getMonth();
-  const title = `${y}년 ${m+1}월`;
-  document.getElementById('miniCalTitle').textContent = title;
-
-  const grid = document.getElementById('miniCalGrid');
-  grid.innerHTML = '';
-
-  ['일','월','화','수','목','금','토'].forEach(d => {
-    const el = document.createElement('div');
-    el.className = 'mini-cal-dow';
-    el.textContent = d;
-    grid.appendChild(el);
-  });
-
-  const first = new Date(y, m, 1).getDay();
-  const days = new Date(y, m+1, 0).getDate();
-  const today = new Date();
-  const eventDays = new Set(events.map(e => formatDate(e.start)));
-
-  for (let i = 0; i < first; i++) {
-    const prev = new Date(y, m, -first+i+1);
-    const el = document.createElement('div');
-    el.className = 'mini-cal-day other-month';
-    el.textContent = prev.getDate();
-    grid.appendChild(el);
-  }
-
-  for (let d = 1; d <= days; d++) {
-    const date = new Date(y, m, d);
-    const el = document.createElement('div');
-    el.className = 'mini-cal-day';
-    el.textContent = d;
-
-    if (formatDate(date) === formatDate(today)) el.classList.add('today');
-    if (formatDate(date) === formatDate(selectedDate)) el.classList.add('selected');
-    if (eventDays.has(formatDate(date))) el.classList.add('has-events');
-
-    el.onclick = () => {
-      selectedDate = date;
-      if (currentView === 'week') { currentDate = date; }
-      renderAll();
-    };
+  const y=miniCalDate.getFullYear(),m=miniCalDate.getMonth();
+  document.getElementById('miniCalTitle').textContent=`${y}년 ${m+1}월`;
+  const grid=document.getElementById('miniCalGrid'); grid.innerHTML='';
+  ['일','월','화','수','목','금','토'].forEach(d=>{const el=document.createElement('div');el.className='mini-cal-dow';el.textContent=d;grid.appendChild(el);});
+  const first=new Date(y,m,1).getDay(), days=new Date(y,m+1,0).getDate(), today=new Date();
+  const evDays=new Set(events.map(e=>fmtDate(e.start)));
+  for(let i=0;i<first;i++){const pd=new Date(y,m,-first+i+1);const el=document.createElement('div');el.className='mini-cal-day other-month';el.innerHTML=`<span>${pd.getDate()}</span>`;grid.appendChild(el);}
+  for(let d=1;d<=days;d++){
+    const date=new Date(y,m,d);const el=document.createElement('div');el.className='mini-cal-day';
+    if(fmtDate(date)===fmtDate(today)) el.classList.add('today');
+    if(fmtDate(date)===fmtDate(selectedDate)) el.classList.add('selected');
+    el.innerHTML=`<span>${d}</span>${evDays.has(fmtDate(date))?'<div class="day-dot"></div>':''}`;
+    el.onclick=()=>{selectedDate=date;renderAll();};
     grid.appendChild(el);
   }
 }
 
-function miniCalNav(dir) {
-  miniCalDate = new Date(miniCalDate.getFullYear(), miniCalDate.getMonth() + dir, 1);
-  renderMiniCal();
-}
+function miniCalNav(dir) { miniCalDate=new Date(miniCalDate.getFullYear(),miniCalDate.getMonth()+dir,1); renderMiniCal(); }
 
-// Upcoming events (next 48hrs)
 function renderUpcoming() {
-  const list = document.getElementById('upcomingList');
-  const now = new Date();
-  const cutoff = new Date(now.getTime() + 48 * 3600000);
+  const now=new Date(), cutoff=new Date(now.getTime()+48*3600000);
+  const up=events.filter(e=>!e.allDay&&e.start>now&&e.start<cutoff).sort((a,b)=>a.start-b.start).slice(0,4);
+  const sec=document.getElementById('upcomingSection'), list=document.getElementById('upcomingList');
+  if(!up.length){sec.style.display='none';return;}
+  sec.style.display='';
+  list.innerHTML=`<div class="upcoming-card"><div class="upcoming-label">⚡ 다가오는 일정</div>${up.map(ev=>{
+    const diff=ev.start-now,h=Math.floor(diff/3600000),m=Math.floor((diff%3600000)/60000);
+    const label=h>0?`${h}시간 ${m}분 후`:`${m}분 후`;const urgent=diff<30*60000;
+    return `<div class="upcoming-item" onclick="showDetail('${ev.id}')"><div class="upcoming-color-bar" style="background:${ev.color}"></div><div class="upcoming-info"><div class="upcoming-title">${ev.title}</div><div class="upcoming-when">${fmtTime(ev.start)} · ${ev.location||'장소 없음'}</div></div><div class="upcoming-badge ${urgent?'urgent':''}">${label}</div></div>`;
+  }).join('')}</div>`;
+}
 
-  const upcoming = events
-    .filter(e => !e.allDay && e.start > now && e.start < cutoff)
-    .sort((a,b) => a.start - b.start)
-    .slice(0, 5);
+function renderDayEvents() {
+  const list=document.getElementById('dayEventsList'), title=document.getElementById('selectedDayTitle');
+  const today=new Date(), isToday=fmtDate(selectedDate)===fmtDate(today);
+  title.textContent=isToday?'오늘 일정':`${selectedDate.getMonth()+1}월 ${selectedDate.getDate()}일 일정`;
+  const dayEvs=events.filter(e=>fmtDate(e.start)===fmtDate(selectedDate)).sort((a,b)=>a.start-b.start);
+  if(!dayEvs.length){list.innerHTML=`<div class="empty-state"><div class="empty-icon">📭</div><div class="empty-title">일정이 없습니다</div><div class="empty-desc">+ 버튼으로 새 일정을 추가해보세요</div></div>`;return;}
+  list.innerHTML=dayEvs.map(ev=>renderEvCard(ev)).join('');
+}
 
-  if (!upcoming.length) {
-    list.innerHTML = '<div style="font-size:12px; color:var(--text3); padding:8px 4px;">향후 48시간 내 일정 없음</div>';
-    return;
-  }
+function renderEvCard(ev) {
+  const timeStr=ev.allDay?'하루 종일':`${fmtTime(ev.start)} – ${fmtTime(ev.end)}`;
+  const dur=ev.allDay?'':Math.round((ev.end-ev.start)/60000)+'분';
+  return `<div class="ev-card ${ev.allDay?'allday':''}" onclick="showDetail('${ev.id}')"><div class="ev-stripe" style="background:${ev.color}"></div><div class="ev-body"><div class="ev-title">${ev.title}</div><div class="ev-meta"><span>${timeStr}</span>${ev.location?`<span style="color:var(--text3)">·</span><span>📍 ${ev.location}</span>`:''}</div></div>${!ev.allDay?`<div class="ev-right"><div class="ev-time-badge">${fmtTime(ev.start)}</div><div class="ev-duration">${dur}</div></div>`:''}</div>`;
+}
 
-  list.innerHTML = upcoming.map(ev => {
-    const diff = ev.start - now;
-    const h = Math.floor(diff / 3600000);
-    const m = Math.floor((diff % 3600000) / 60000);
-    const countdown = h > 0 ? `${h}시간 ${m}분 후` : `${m}분 후`;
-    const soon = diff < 30 * 60000;
+function setListFilter(f,btn) { listFilter=f; document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active')); btn.classList.add('active'); renderList(); }
 
-    return `<div class="upcoming-item" onclick="selectEvent('${ev.id}')">
-      <div class="upcoming-color" style="background:${ev.color}"></div>
-      <div class="upcoming-info">
-        <div class="upcoming-title">${ev.title}</div>
-        <div class="upcoming-time">${formatTime(ev.start)}</div>
-      </div>
-      <div class="upcoming-countdown ${soon ? 'soon' : ''}">${countdown}</div>
-    </div>`;
+function renderList() {
+  const now=new Date();
+  let filtered=[...events].sort((a,b)=>a.start-b.start);
+  if(listFilter==='upcoming') filtered=filtered.filter(e=>e.start>=now||e.allDay);
+  else if(listFilter==='today') filtered=filtered.filter(e=>fmtDate(e.start)===fmtDate(now));
+  else if(listFilter==='week'){const ws=getWeekStart(now),we=new Date(ws);we.setDate(we.getDate()+7);filtered=filtered.filter(e=>e.start>=ws&&e.start<we);}
+  const content=document.getElementById('listContent');
+  if(!filtered.length){content.innerHTML=`<div class="empty-state"><div class="empty-icon">📋</div><div class="empty-title">일정이 없습니다</div><div class="empty-desc">해당 기간에 일정이 없습니다</div></div>`;return;}
+  const byDate={};
+  filtered.forEach(ev=>{const k=fmtDate(ev.start);if(!byDate[k])byDate[k]=[];byDate[k].push(ev);});
+  const dows=['일','월','화','수','목','금','토'];
+  content.innerHTML=Object.entries(byDate).map(([date,evs])=>{
+    const d=new Date(date),isToday=date===fmtDate(now);
+    return `<div class="date-group"><div class="date-group-header ${isToday?'is-today':''}">${isToday?'오늘 · ':''}${d.getMonth()+1}월 ${d.getDate()}일 (${dows[d.getDay()]})</div><div class="events-list">${evs.map(ev=>renderEvCard(ev)).join('')}</div></div>`;
   }).join('');
 }
 
-// Main view
-function renderMainView() {
-  const view = document.getElementById('calendarView');
-  const title = document.getElementById('viewTitle');
+function navWeek(dir) { weekDate.setDate(weekDate.getDate()+dir*7); renderWeek(); }
 
-  if (currentView === 'week') {
-    // Week view
-    const startOfWeek = getWeekStart(currentDate);
-    const endOfWeek = new Date(startOfWeek);
-    endOfWeek.setDate(endOfWeek.getDate() + 6);
-    title.textContent = `${startOfWeek.getMonth()+1}월 ${startOfWeek.getDate()}일 – ${endOfWeek.getMonth()+1}월 ${endOfWeek.getDate()}일`;
-    view.innerHTML = renderWeekView(startOfWeek);
-    drawNowLine();
-  } else if (currentView === 'day') {
-    title.textContent = `${currentDate.getFullYear()}년 ${currentDate.getMonth()+1}월 ${currentDate.getDate()}일`;
-    view.innerHTML = renderDayView(currentDate);
-  } else {
-    title.textContent = '전체 일정 목록';
-    view.innerHTML = renderListView();
-  }
-}
-
-function renderWeekView(weekStart) {
-  const days = [];
-  const today = new Date();
-  for (let i = 0; i < 7; i++) {
-    const d = new Date(weekStart);
-    d.setDate(d.getDate() + i);
-    days.push(d);
-  }
-
-  const dows = ['일','월','화','수','목','금','토'];
-  let html = `<div class="week-grid">
-    <div class="week-header-time"></div>
-    ${days.map(d => `<div class="week-header-day ${formatDate(d) === formatDate(today) ? 'today' : ''}">
-      <div class="day-num">${d.getDate()}</div>
-      <div class="day-name">${dows[d.getDay()]}</div>
-    </div>`).join('')}`;
-
-  for (let h = 0; h < 24; h++) {
-    const label = h === 0 ? '' : `${h}:00`;
-    html += `<div class="time-label">${label}</div>`;
-    days.forEach((d, di) => {
-      const dayEvents = events.filter(e => {
-        if (e.allDay) return false;
-        return formatDate(e.start) === formatDate(d) &&
-          e.start.getHours() === h;
-      });
-      const isToday = formatDate(d) === formatDate(today);
-      html += `<div class="day-col ${isToday ? 'today' : ''}" id="col-${di}-${h}">
-        <div class="hour-line"></div>
-        ${dayEvents.map(ev => {
-          const startMin = ev.start.getMinutes();
-          const durH = (ev.end - ev.start) / 3600000;
-          const top = (startMin / 60) * 56;
-          const height = Math.max(24, durH * 56 - 2);
-          return `<div class="event-block" style="background:${ev.color}22; border-left:3px solid ${ev.color}; top:${top}px; height:${height}px; color:${ev.color}" onclick="editEvent('${ev.id}')">
-            <div>${ev.title}</div>
-            <div class="ev-time">${formatTime(ev.start)}</div>
-          </div>`;
-        }).join('')}
-      </div>`;
+function renderWeek() {
+  const ws=getWeekStart(weekDate),we=new Date(ws);we.setDate(we.getDate()+6);
+  document.getElementById('weekTitle').textContent=`${ws.getMonth()+1}월 ${ws.getDate()}일 – ${we.getMonth()+1}월 ${we.getDate()}일`;
+  const days=[]; for(let i=0;i<7;i++){const d=new Date(ws);d.setDate(d.getDate()+i);days.push(d);}
+  const today=new Date(), dows=['일','월','화','수','목','금','토'];
+  let html=`<div class="week-days-header"><div class="week-time-col"></div>${days.map(d=>`<div class="week-day-head ${fmtDate(d)===fmtDate(today)?'today':''}"><div class="week-day-num">${d.getDate()}</div><div class="week-day-name">${dows[d.getDay()]}</div></div>`).join('')}</div><div class="week-body">`;
+  for(let h=0;h<24;h++){
+    html+=`<div class="week-hour-label">${h===0?'':h+':00'}</div>`;
+    days.forEach((d,di)=>{
+      const isToday=fmtDate(d)===fmtDate(today);
+      const hEvs=events.filter(e=>!e.allDay&&fmtDate(e.start)===fmtDate(d)&&e.start.getHours()===h);
+      const showNow=isToday&&h===today.getHours();
+      html+=`<div class="week-cell ${isToday?'today-col':''}">${showNow?`<div class="now-line" style="top:${(today.getMinutes()/60)*48}px"></div>`:''}${hEvs.map(ev=>{const top=(ev.start.getMinutes()/60)*48,height=Math.max(20,((ev.end-ev.start)/3600000)*48-1);return `<div class="week-event" style="background:${ev.color}33;border-left:3px solid ${ev.color};color:${ev.color};top:${top}px;height:${height}px;" onclick="showDetail('${ev.id}')">${ev.title}</div>`;}).join('')}</div>`;
     });
   }
-
-  html += '</div>';
-  return html;
+  html+='</div>';
+  document.getElementById('weekGrid').innerHTML=html;
+  setTimeout(()=>{const w=document.getElementById('weekWrap');if(w)w.scrollTop=8*48;},50);
 }
 
-function drawNowLine() {
-  const now = new Date();
-  const h = now.getHours();
-  const m = now.getMinutes();
-  const top = (m / 60) * 56;
-  const today = new Date();
-  const weekStart = getWeekStart(currentDate);
-  let di = Math.round((today - weekStart) / 86400000);
-  if (di < 0 || di > 6) return;
-
-  const col = document.getElementById(`col-${di}-${h}`);
-  if (!col) return;
-  const line = document.createElement('div');
-  line.className = 'now-line';
-  line.style.top = top + 'px';
-  col.appendChild(line);
-}
-
-function renderDayView(date) {
-  const dayEvents = events.filter(e => formatDate(e.start) === formatDate(date))
-    .sort((a,b) => a.start - b.start);
-
-  if (!dayEvents.length) {
-    return `<div class="empty-state">
-      <div class="empty-state-icon">📭</div>
-      <h3>일정이 없습니다</h3>
-      <p>이 날에는 등록된 일정이 없습니다.<br>새 일정을 추가해보세요!</p>
+function showDetail(id) {
+  const ev=events.find(e=>e.id===id); if(!ev) return;
+  const timeStr=ev.allDay?'하루 종일':`${fmtTime(ev.start)} – ${fmtTime(ev.end)}`;
+  const dur=ev.allDay?'':Math.round((ev.end-ev.start)/60000)+'분';
+  document.getElementById('detailContent').innerHTML=`
+    <div class="modal-header"><div></div><button class="modal-close" onclick="closeModal('detailModal')">✕</button></div>
+    <div class="detail-color-bar" style="background:${ev.color}"></div>
+    <div class="detail-title">${ev.title}</div>
+    <div class="detail-rows">
+      <div class="detail-row"><div class="detail-row-icon">🗓</div><div class="detail-row-text">${fmtDate(ev.start).replace(/-/g,'.')} ${timeStr}${dur?' ('+dur+')':''}</div></div>
+      ${ev.location?`<div class="detail-row"><div class="detail-row-icon">📍</div><div class="detail-row-text">${ev.location}</div></div>`:''}
+      ${ev.desc?`<div class="detail-row"><div class="detail-row-icon">📝</div><div class="detail-row-text">${ev.desc}</div></div>`:''}
+    </div>
+    <div class="detail-actions">
+      <button class="btn-danger" onclick="deleteEvent('${ev.id}')">삭제</button>
+      <button class="btn-primary" style="flex:1" onclick="closeModal('detailModal');editEvent('${ev.id}')">수정하기</button>
     </div>`;
-  }
-
-  return `<div class="day-events">${dayEvents.map(ev => `
-    <div class="day-event-card" onclick="editEvent('${ev.id}')">
-      <div class="day-event-color" style="background:${ev.color}"></div>
-      <div class="day-event-body">
-        <div class="day-event-title">${ev.title}</div>
-        <div class="day-event-meta">
-          <span>${ev.allDay ? '하루 종일' : formatTime(ev.start) + ' – ' + formatTime(ev.end)}</span>
-          ${ev.location ? `<span>📍 ${ev.location}</span>` : ''}
-        </div>
-        ${ev.desc ? `<div style="font-size:12px; color:var(--text2); margin-top:6px;">${ev.desc}</div>` : ''}
-        <div class="day-event-badges">
-          <span class="badge" style="background:${ev.color}22; color:${ev.color}">
-            ${ev.allDay ? '하루 종일' : Math.round((ev.end-ev.start)/60000) + '분'}
-          </span>
-        </div>
-      </div>
-    </div>`).join('')}
-  </div>`;
+  document.getElementById('detailModal').classList.add('open');
 }
 
-function renderListView() {
-  const sorted = [...events].sort((a,b) => a.start - b.start);
-  if (!sorted.length) {
-    return `<div class="empty-state"><div class="empty-state-icon">📋</div><h3>일정이 없습니다</h3><p>아직 등록된 일정이 없습니다.</p></div>`;
-  }
-
-  let byDate = {};
-  sorted.forEach(ev => {
-    const key = formatDate(ev.start);
-    if (!byDate[key]) byDate[key] = [];
-    byDate[key].push(ev);
-  });
-
-  return Object.entries(byDate).map(([date, evs]) => {
-    const d = new Date(date);
-    const dows = ['일','월','화','수','목','금','토'];
-    const isToday = date === formatDate(new Date());
-    return `<div style="margin-bottom:1.5rem;">
-      <div style="font-size:13px; font-weight:700; color:${isToday ? 'var(--accent2)' : 'var(--text2)'}; margin-bottom:0.75rem; padding-bottom:0.5rem; border-bottom:1px solid var(--border);">
-        ${isToday ? '오늘 · ' : ''}${d.getMonth()+1}월 ${d.getDate()}일 (${dows[d.getDay()]})
-      </div>
-      <div class="day-events">${evs.map(ev => `
-        <div class="day-event-card" onclick="editEvent('${ev.id}')">
-          <div class="day-event-color" style="background:${ev.color}"></div>
-          <div class="day-event-body">
-            <div class="day-event-title">${ev.title}</div>
-            <div class="day-event-meta">
-              <span>${ev.allDay ? '하루 종일' : formatTime(ev.start) + ' – ' + formatTime(ev.end)}</span>
-              ${ev.location ? `<span>📍 ${ev.location}</span>` : ''}
-            </div>
-          </div>
-        </div>`).join('')}
-      </div>
-    </div>`;
-  }).join('');
-}
-
-// ========== NAVIGATION ==========
-function setView(v, btn) {
-  currentView = v;
-  document.querySelectorAll('.view-tab').forEach(t => t.classList.remove('active'));
-  btn.classList.add('active');
-  renderMainView();
-}
-
-function navDate(dir) {
-  if (currentView === 'week') {
-    currentDate.setDate(currentDate.getDate() + dir * 7);
-  } else {
-    currentDate.setDate(currentDate.getDate() + dir);
-  }
-  selectedDate = new Date(currentDate);
-  renderAll();
-}
-
-function goToday() {
-  currentDate = new Date();
-  selectedDate = new Date();
-  miniCalDate = new Date();
-  renderAll();
-}
-
-// ========== ADD/EDIT EVENTS ==========
 function openAddEvent() {
-  editingEventId = null;
-  document.getElementById('modalTitle').textContent = '새 일정 추가';
-  document.getElementById('evTitle').value = '';
-  document.getElementById('evDate').value = formatDate(selectedDate);
-  document.getElementById('evStart').value = '09:00';
-  document.getElementById('evEnd').value = '10:00';
-  document.getElementById('evLocation').value = '';
-  document.getElementById('evDesc').value = '';
-  document.getElementById('evAllDay').value = 'false';
-  selectedColor = COLORS[0].hex;
-  renderColorPicker();
-  document.getElementById('eventModal').classList.add('open');
+  editingId=null; document.getElementById('modalTitle').textContent='새 일정';
+  document.getElementById('evTitle').value=''; document.getElementById('evDate').value=fmtDate(selectedDate);
+  document.getElementById('evStart').value='09:00'; document.getElementById('evEnd').value='10:00';
+  document.getElementById('evLocation').value=''; document.getElementById('evDesc').value='';
+  document.getElementById('evAllDay').value='false'; document.getElementById('timeRow').style.display='';
+  selectedColor=COLORS[0]; renderColorPicker(); document.getElementById('eventModal').classList.add('open');
 }
 
 function editEvent(id) {
-  const ev = events.find(e => e.id === id);
-  if (!ev) return;
-  editingEventId = id;
-  document.getElementById('modalTitle').textContent = '일정 수정';
-  document.getElementById('evTitle').value = ev.title;
-  document.getElementById('evDate').value = formatDate(ev.start);
-  document.getElementById('evStart').value = ev.allDay ? '09:00' : `${pad(ev.start.getHours())}:${pad(ev.start.getMinutes())}`;
-  document.getElementById('evEnd').value = ev.allDay ? '10:00' : `${pad(ev.end.getHours())}:${pad(ev.end.getMinutes())}`;
-  document.getElementById('evLocation').value = ev.location;
-  document.getElementById('evDesc').value = ev.desc;
-  document.getElementById('evAllDay').value = ev.allDay ? 'true' : 'false';
-  selectedColor = ev.color;
-  renderColorPicker();
-  document.getElementById('eventModal').classList.add('open');
-}
-
-function selectEvent(id) {
-  editEvent(id);
-}
-
-function closeModal() {
-  document.getElementById('eventModal').classList.remove('open');
-}
-
-function renderColorPicker() {
-  document.getElementById('colorPicker').innerHTML = COLORS.map(c =>
-    `<div class="color-swatch ${c.hex === selectedColor ? 'selected' : ''}"
-      style="background:${c.hex}" title="${c.name}"
-      onclick="selectColor('${c.hex}')"></div>`
-  ).join('');
-}
-
-function selectColor(hex) {
-  selectedColor = hex;
-  renderColorPicker();
+  const ev=events.find(e=>e.id===id); if(!ev) return;
+  editingId=id; document.getElementById('modalTitle').textContent='일정 수정';
+  document.getElementById('evTitle').value=ev.title; document.getElementById('evDate').value=fmtDate(ev.start);
+  document.getElementById('evStart').value=ev.allDay?'09:00':`${pad(ev.start.getHours())}:${pad(ev.start.getMinutes())}`;
+  document.getElementById('evEnd').value=ev.allDay?'10:00':`${pad(ev.end.getHours())}:${pad(ev.end.getMinutes())}`;
+  document.getElementById('evLocation').value=ev.location; document.getElementById('evDesc').value=ev.desc;
+  document.getElementById('evAllDay').value=ev.allDay?'true':'false';
+  document.getElementById('timeRow').style.display=ev.allDay?'none':'';
+  selectedColor=ev.color; renderColorPicker(); document.getElementById('eventModal').classList.add('open');
 }
 
 async function saveEvent() {
-  const title = document.getElementById('evTitle').value.trim();
-  if (!title) { toast('제목을 입력해주세요', 'error'); return; }
-
-  const dateStr = document.getElementById('evDate').value;
-  const startStr = document.getElementById('evStart').value;
-  const endStr = document.getElementById('evEnd').value;
-  const allDay = document.getElementById('evAllDay').value === 'true';
-
-  const start = allDay ? new Date(dateStr) : new Date(`${dateStr}T${startStr}`);
-  const end = allDay ? new Date(dateStr) : new Date(`${dateStr}T${endStr}`);
-
-  const ev = {
-    id: editingEventId || 'local-' + Date.now(),
-    title,
-    start,
-    end,
-    allDay,
-    location: document.getElementById('evLocation').value,
-    desc: document.getElementById('evDesc').value,
-    color: selectedColor
-  };
-
-  if (editingEventId) {
-    const idx = events.findIndex(e => e.id === editingEventId);
-    if (idx >= 0) events[idx] = ev;
-  } else {
-    events.push(ev);
-    if (!DEMO_MODE) {
-      const result = await addEventToGoogle(ev);
-      if (result && result.id) ev.id = result.id;
-    }
-  }
-
-  closeModal();
-  scheduleAllNotifications();
-  renderAll();
-  toast(editingEventId ? '✓ 일정이 수정되었습니다' : '✓ 일정이 추가되었습니다', 'success');
+  const title=document.getElementById('evTitle').value.trim();
+  if(!title){toast('제목을 입력해주세요 ⚠️');return;}
+  const dateStr=document.getElementById('evDate').value, allDay=document.getElementById('evAllDay').value==='true';
+  const start=allDay?new Date(dateStr):new Date(`${dateStr}T${document.getElementById('evStart').value}`);
+  const end=allDay?new Date(dateStr):new Date(`${dateStr}T${document.getElementById('evEnd').value}`);
+  const ev={id:editingId||'local-'+Date.now(),title,start,end,allDay,location:document.getElementById('evLocation').value,desc:document.getElementById('evDesc').value,color:selectedColor};
+  if(editingId){const idx=events.findIndex(e=>e.id===editingId);if(idx>=0)events[idx]=ev;}
+  else{events.push(ev);await addToGoogle(ev);}
+  closeModal('eventModal'); renderAll(); scheduleNotifs();
+  toast(editingId?'✓ 일정이 수정됐습니다':'✓ 일정이 추가됐습니다');
 }
 
-// ========== UTILS ==========
-function formatDate(d) {
-  if (!d) return '';
-  return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+async function deleteEvent(id) {
+  events=events.filter(e=>e.id!==id); await deleteFromGoogle(id);
+  closeModal('detailModal'); renderAll(); toast('🗑 일정이 삭제됐습니다');
 }
 
-function formatTime(d) {
-  return `${pad(d.getHours())}:${pad(d.getMinutes())}`;
+function toggleTimeRow() { document.getElementById('timeRow').style.display=document.getElementById('evAllDay').value==='true'?'none':''; }
+function renderColorPicker() { document.getElementById('colorPicker').innerHTML=COLORS.map(c=>`<div class="color-swatch ${c===selectedColor?'selected':''}" style="background:${c}" onclick="selectedColor='${c}';renderColorPicker()"></div>`).join(''); }
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+
+document.querySelectorAll('.modal-overlay').forEach(el=>{el.addEventListener('click',e=>{if(e.target===el)el.classList.remove('open');});});
+
+function toast(msg) {
+  const el=document.createElement('div'); el.className='toast'; el.textContent=msg;
+  document.getElementById('toastWrap').appendChild(el); setTimeout(()=>el.remove(),2800);
 }
 
-function pad(n) { return n.toString().padStart(2, '0'); }
+function fmtDate(d) { if(!d) return ''; return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`; }
+function fmtTime(d) { return `${pad(d.getHours())}:${pad(d.getMinutes())}`; }
+function pad(n) { return n.toString().padStart(2,'0'); }
+function getWeekStart(d) { const date=new Date(d); date.setDate(date.getDate()-date.getDay()); date.setHours(0,0,0,0); return date; }
 
-function getWeekStart(d) {
-  const date = new Date(d);
-  const day = date.getDay();
-  date.setDate(date.getDate() - day);
-  date.setHours(0,0,0,0);
-  return date;
-}
+const hash=window.location.hash;
+if(hash.includes('access_token')){const params=new URLSearchParams(hash.substring(1));localStorage.setItem('gToken',params.get('access_token'));window.location.hash='';isAuthenticated=true;showApp();}
 
-function toast(msg, type = 'info') {
-  const icons = { success: '✅', error: '❌', info: 'ℹ️', warning: '⚠️' };
-  const el = document.createElement('div');
-  el.className = 'toast';
-  el.innerHTML = `<span class="toast-icon">${icons[type]}</span><span>${msg}</span>`;
-  document.getElementById('toastContainer').appendChild(el);
-  setTimeout(() => el.remove(), 3500);
-}
+if('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(()=>{});
 
-function openSettings() {
-  toast('설정은 사이드바에서 변경할 수 있습니다', 'info');
-}
-
-// ========== INIT ==========
-// Check for OAuth callback token
-const hash = window.location.hash;
-if (hash.includes('access_token')) {
-  const params = new URLSearchParams(hash.substring(1));
-  const token = params.get('access_token');
-  localStorage.setItem('gToken', token);
-  window.location.hash = '';
-  isAuthenticated = true;
-  showApp();
-}
-
-// Check for notification permission
-if ('Notification' in window && Notification.permission === 'default') {
-  document.getElementById('notifBar').style.display = 'flex';
-}
-
-// PWA Service Worker
-if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('sw.js').catch(() => {});
-}
-
-// Auto-update upcoming every minute
-setInterval(() => {
-  if (isAuthenticated) renderUpcoming();
-}, 60000);
+setInterval(()=>{if(isAuthenticated)renderUpcoming();},60000);
+setPage('home');
 </script>
 </body>
 </html>
